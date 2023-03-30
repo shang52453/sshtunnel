@@ -1,0 +1,3 @@
+spring:
+  gson:
+    field-naming-policy: UPPER_CAMEL_CASE

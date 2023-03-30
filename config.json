@@ -1,0 +1,11 @@
+{
+  "KeyFiles": ["/path/to/id_rsa"],
+  "KnownHostFiles": ["/path/to/known_hosts"],
+  "Tunnels": [{
+    "Tunnel": "bind_address:port -> dial_address:port",
+    "Server": "user@host[:port]"
+  },{
+    "Tunnel": "dial_address:port <- bind_address:port",
+    "Server": "user@host[:port]"
+  }]
+}
