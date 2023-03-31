@@ -46,15 +46,6 @@ public class SshTunnelConfiguration {
     public SshClient sshClient(TunnelConfig tunnelConfig) {
         SshClient sshClient = SshClient.setUpDefaultClient();
         ConfigUtils.parseKeyPair(tunnelConfig).forEach(sshClient::addPublicKeyIdentity);
-        sshClient.setSessionFactory(new SessionFactory(sshClient){
-            @Override
-            protected ClientSessionImpl doCreateSession(IoSession ioSession) throws Exception {
-                ClientSessionImpl session = super.doCreateSession(ioSession);
-                Tunnel tunnel = session.getConnectionContext().getAttribute(Tunnel.TUNNEL_ATTRIBUTE_KEY);
-                session.setSessionHeartbeat(SessionHeartbeatController.HeartbeatType.IGNORE, tunnel.getHeartbeatInterval());
-                return session;
-            }
-        });
         return sshClient;
     }
 
