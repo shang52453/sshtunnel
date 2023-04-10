@@ -9,6 +9,7 @@ import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.common.AttributeRepository;
 import org.apache.sshd.common.session.SessionHeartbeatController;
+import org.apache.sshd.common.util.io.IoUtils;
 import org.apache.sshd.common.util.net.SshdSocketAddress;
 
 import java.io.IOException;
@@ -45,9 +46,10 @@ public class Tunnel {
 
     public void start() {
         this.checkConfig();
+        ClientSession session = null;
         try {
             AttributeRepository context = AttributeRepository.ofKeyValuePair(Tunnel.TUNNEL_ATTRIBUTE_KEY, this);
-            ClientSession session = sshClient.connect(getUser(), getHostAddr().getHost(), getHostAddr().getPort(), context)
+            session = sshClient.connect(getUser(), getHostAddr().getHost(), getHostAddr().getPort(), context)
                     .addListener(future -> {
                         if (future.isConnected()){
                             future.getSession().setSessionHeartbeat(SessionHeartbeatController.HeartbeatType.IGNORE, getHeartbeatInterval());
@@ -56,16 +58,17 @@ public class Tunnel {
                     .verify(getConnectTimeout())
                     .getSession();
             session.auth().verify(getAuthTimeout());
+            getMode().startPortForwarding(this, session);
+            retryCount.set(0);
             if (retryHandler != null) {
                 session.addCloseFutureListener(future -> {
                     if (future.isClosed()) {
-                        retryHandler.retry(Tunnel.this);
+                        retryHandler.retry(this);
                     }
                 });
             }
-            getMode().startPortForwarding(this, session);
-            retryCount.set(0);
         } catch (Throwable t) {
+            IoUtils.closeQuietly(session);
             log.error("", t);
             if (retryHandler != null) {
                 retryHandler.retry(this);

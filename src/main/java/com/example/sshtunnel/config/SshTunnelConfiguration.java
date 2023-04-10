@@ -9,6 +9,7 @@ import org.apache.sshd.client.session.SessionFactory;
 import org.apache.sshd.common.io.IoSession;
 import org.apache.sshd.common.session.SessionHeartbeatController;
 import org.springframework.boot.ApplicationArguments;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.PathResource;
@@ -19,6 +20,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.Duration;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
@@ -50,8 +53,10 @@ public class SshTunnelConfiguration {
     }
 
     @Bean
-    public RetryHandler retryHandler(ThreadPoolTaskScheduler scheduler){
+    public RetryHandler retryHandler(ThreadPoolTaskScheduler scheduler, ConfigurableApplicationContext applicationContext){
+        Set<Tunnel> tunnels = ConcurrentHashMap.newKeySet();
         return tunnel -> {
+            tunnels.add(tunnel);
             if (tunnel.getRetryCount().getAndIncrement() < tunnel.getRetryMax()) {
                 Duration retryInterval = tunnel.getRetryInterval();
                 scheduler.getScheduledExecutor().schedule(() -> {
@@ -60,6 +65,10 @@ public class SshTunnelConfiguration {
                 }, retryInterval.toNanos(), TimeUnit.NANOSECONDS);
             } else {
                 log.info("{} end retry", tunnel);
+                tunnels.remove(tunnel);
+                if (tunnels.isEmpty()){
+                    applicationContext.close();
+                }
             }
         };
     }
