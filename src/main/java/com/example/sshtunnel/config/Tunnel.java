@@ -63,8 +63,8 @@ public class Tunnel {
                     }
                 });
             }
-            retryCount.set(0);
             getMode().startPortForwarding(this, session);
+            retryCount.set(0);
         } catch (Throwable t) {
             log.error("", t);
             if (retryHandler != null) {
