@@ -24,8 +24,8 @@ public class Tunnel {
     private Mode mode;
     private String user;
     private HostAndPort hostAddr;
-    private HostAndPort bindAddr;
-    private HostAndPort dialAddr;
+    private HostAndPort localAddr;
+    private HostAndPort remoteAddr;
 
     private Duration connectTimeout = Duration.ofSeconds(10);
 
@@ -80,8 +80,8 @@ public class Tunnel {
     public void checkConfig() {
         Objects.requireNonNull(mode);
         Objects.requireNonNull(hostAddr);
-        Objects.requireNonNull(bindAddr);
-        Objects.requireNonNull(dialAddr);
+        Objects.requireNonNull(localAddr);
+        Objects.requireNonNull(remoteAddr);
         Objects.requireNonNull(sshClient);
     }
 
@@ -90,13 +90,13 @@ public class Tunnel {
         LOCAL_FORWARD("->") {
             @Override
             public void startPortForwarding(Tunnel tunnel, ClientSession session) throws IOException {
-                session.startLocalPortForwarding(new SshdSocketAddress(tunnel.getBindAddr().getHost(), tunnel.getBindAddr().getPort()), new SshdSocketAddress(tunnel.getDialAddr().getHost(), tunnel.getDialAddr().getPort()));
+                session.startLocalPortForwarding(new SshdSocketAddress(tunnel.getLocalAddr().getHost(), tunnel.getLocalAddr().getPort()), new SshdSocketAddress(tunnel.getRemoteAddr().getHost(), tunnel.getRemoteAddr().getPort()));
             }
         },
         REMOTE_FORWARD("<-") {
             @Override
             public void startPortForwarding(Tunnel tunnel, ClientSession session) throws IOException {
-                session.startRemotePortForwarding(new SshdSocketAddress(tunnel.getDialAddr().getHost(), tunnel.getDialAddr().getPort()), new SshdSocketAddress(tunnel.getBindAddr().getHost(), tunnel.getBindAddr().getPort()));
+                session.startRemotePortForwarding(new SshdSocketAddress(tunnel.getRemoteAddr().getHost(), tunnel.getRemoteAddr().getPort()), new SshdSocketAddress(tunnel.getLocalAddr().getHost(), tunnel.getLocalAddr().getPort()));
             }
         };
 

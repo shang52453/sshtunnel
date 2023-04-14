@@ -38,9 +38,9 @@ public abstract class ConfigUtils {
                 .map(tunnels -> tunnels.stream().map(tunnel -> {
                     Tunnel tunnel1 = new Tunnel();
                     String[] split = tunnel.getTunnel().split("\\s+");
-                    tunnel1.setBindAddr(HostAndPort.fromString(split[0]));
+                    tunnel1.setLocalAddr(HostAndPort.fromString(split[0]));
                     tunnel1.setMode(Tunnel.Mode.find(split[1]));
-                    tunnel1.setDialAddr(HostAndPort.fromString(split[2]));
+                    tunnel1.setRemoteAddr(HostAndPort.fromString(split[2]));
                     Optional.ofNullable(tunnel.getConnectTimeout()).ifPresent(tunnel1::setConnectTimeout);
                     Optional.ofNullable(tunnel.getAuthTimeout()).ifPresent(tunnel1::setAuthTimeout);
                     Optional.ofNullable(tunnel.getRetryInterval()).ifPresent(tunnel1::setRetryInterval);
